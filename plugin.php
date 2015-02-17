@@ -47,27 +47,14 @@ class BureauOpvallend {
 		register_uninstall_hook( __FILE__, array( $this, 'uninstall' ) );
 				
 		add_action('widgets_init', array($this, 'register_widgets' ));
-		//this must be inside is_admin, see: http://codex.wordpress.org/AJAX_in_Plugins#Ajax_on_the_Viewer-Facing_Side	
-		if(is_admin()){
-			add_action('wp_ajax_nopriv_get_games',array($this,'fetch_games'));			
-			add_action('wp_ajax_get_games',array($this,'fetch_games'));		
-		}
-
+	
 	} 
 
-	public function fetch_games() {
-		include_once('models/FilterModel.php');
-		$m = new FilterModel(null);
-		$json = $m->getGames();
-		header('Content-Type: application/json');
-		echo $json;
-		exit;
-	}
 
 	public function start_session(){
 		session_start();
 	}
-	
+	 //
 	public function register_widgets(){
 		include_once('widgets/FilterWidget.php');
 		register_widget('FilterWidget');
@@ -156,7 +143,7 @@ class BureauOpvallend {
 	 * Registers and enqueues plugin-specific scripts.
 	 */
 	public function register_plugin_scripts() {
-		wp_enqueue_script('filterscript', plugins_url('/bureauopvallend/js/filter.js'), array('jquery') );		
+	//	wp_enqueue_script('filterscript', plugins_url('/bureauopvallend/js/filter.js'), array('jquery') );		
 	}
 } // end class
 

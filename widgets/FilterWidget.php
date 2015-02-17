@@ -32,7 +32,7 @@ class FilterWidget extends WP_Widget {
 		$instance = array();
 		$instance['title'] = strip_tags( $new_instance['title'] );
 
-		return $instance;
+		return $instance; 
 	}
 
 	public function widget( $args, $instance ) {
@@ -48,8 +48,8 @@ class FilterWidget extends WP_Widget {
 		
 		$m = new FilterModel($options);
 		$v = new FilterView($m);
-		
-		$v->render();
+		 
+		echo $v->render();
 		
 		echo $after_widget;	
 	}
