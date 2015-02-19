@@ -61,7 +61,7 @@ jQuery(document).ready(function($){
 				var name = cat.name;
 				if(cat.parent !== 0) {// not root
 					if(!arrayContains(filterStruct[titleByIdMap[cat.parent]], name) ){
-						filterStruct[titleByIdMap[cat.parent]].push({ "name" : name, "id" : cat.term_id});
+						filterStruct[titleByIdMap[cat.parent]].push({ "name" : name, "id" : cat.term_id, "parentid" : cat.parent});
 					}
 				}
 			}
@@ -85,21 +85,60 @@ jQuery(document).ready(function($){
 			var items = filterStruct[type];
 			if(items.length > 0){
 				output += "<h4>"+type+"</h4>";
+				items.sort(function(a,b){
+					if(a.name < b.name) return -1;
+				    if(a.name > b.name) return 1;
+					return 0;
+				});
 				for(var i = 0; i < items.length; i++){
 					var item = items[i];
-					output += "<input type='checkbox' class='gamefiltercheckbox' value='"+item.id+"'/> "+item.name+" ("+postsByCategoryId[item.id].length+")<br/>";
+					output += "<input type='checkbox' class='gamefiltercheckbox' data-parentid='"+item.parentid+"' value='"+item.id+"'/> "+item.name+" ("+postsByCategoryId[item.id].length+")<br/>";
 				}
 			}
 		}
 
+		function intersect(a, b) {
+			var t;
+			if (b.length > a.length) t = b, b = a, a = t; // indexOf to loop over shorter
+			return a.filter(function (e) {
+				if (b.indexOf(e) !== -1) return true;
+			});
+		}
+
 		function doFilter(){
+			$('.thumbnail').css('opacity','1');
 			//check all CHECKED checkboxes, their value. 
-			var checkedPosts = [];
+			var checkedPosts = {}; //map of parentcat->[posts]
 			var numChecked = 0;
 			$('.gamefiltercheckbox:checked').each(function(){
 				numChecked++;
-				checkedPosts = checkedPosts.concat(postsByCategoryId[$(this).val()]);
+				var parentid = $(this).attr('data-parentid');
+				if(checkedPosts[parentid] == null || checkedPosts[parentid] == undefined){
+				   checkedPosts[parentid] = [];
+				}
+
+				checkedPosts[parentid] = checkedPosts[parentid].concat(postsByCategoryId[$(this).val()]).unique(); //union things from the same parent cat
+
+
 			});
+
+
+			//now intersect all the keys in checkedPosts
+			var checkedPostsTotal = [];
+
+			console.log(checkedPosts);
+
+			for(var parentid in checkedPosts){
+				if(checkedPosts[parentid].length == 0){ //nothing in this subcategory is checked, ignore it
+					continue;
+				}
+				if(checkedPostsTotal.length == 0){
+					checkedPostsTotal = checkedPosts[parentid]; //init the list, because intersection with empty list yields empty list
+				}
+				checkedPostsTotal = intersect(checkedPosts[parentid], checkedPostsTotal);
+			}
+
+			console.log(checkedPostsTotal);
 
 			//special case; show everything
 			if(numChecked == 0){
@@ -107,11 +146,11 @@ jQuery(document).ready(function($){
 				return;
 			}
 
-			checkedPosts = checkedPosts.unique();
+			checkedPostsTotal = checkedPostsTotal.unique();
 
 			var filterString = "";
-			for(var i = 0; i < checkedPosts.length; i++){
-				var id = checkedPosts[i];
+			for(var i = 0; i < checkedPostsTotal.length; i++){
+				var id = checkedPostsTotal[i];
 //				$('.image-grid > li[data-id="'+id+'"]').show();
 				filterString += '.isotope-item[data-id="'+id+'"], ';
 			}
